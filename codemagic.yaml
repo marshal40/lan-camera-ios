@@ -1,0 +1,34 @@
+
+workflows:
+  existing-ios-project-check:
+    name: Existing iOS project - simulator compile
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: latest
+      vars:
+        XCODE_PROJECT: "MyApp.xcodeproj"
+        XCODE_SCHEME: "MyApp"
+
+    scripts:
+      - name: Resolve Swift packages
+        script: |
+          xcodebuild -resolvePackageDependencies \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME"
+
+      - name: Compile existing app for iOS Simulator
+        script: |
+          xcodebuild \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath "$CM_BUILD_DIR/build/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+    artifacts:
+      - build/DerivedData/Build/Products/Debug-iphonesimulator/*.app
+      - build/DerivedData/Logs/Build/*.xcresult
